@@ -13,6 +13,7 @@
 #include <fstream>
 #include <ctime>
 #include <csignal>
+#include <deque>
 
 // ==========================================
 // SETTINGS
@@ -20,6 +21,7 @@
 const char* PORT_NAME = "/dev/ttyUSB7"; 
 const int BAUD_RATE = B115200;
 const char* LOG_FILE_NAME = "lte_signal_log.csv";
+const int HISTORY_SIZE = 15; 
 // ==========================================
 
 using namespace std;
@@ -33,8 +35,9 @@ string get_timestamp() {
     return string(buf);
 }
 
+// Visual Bar needs to be fixed width to align properly
 const char* get_quality_bar(int rsrp) {
-    if (rsrp == 0 || rsrp < -140) return "[!] NO SIGNAL "; 
+    if (rsrp == 0 || rsrp < -140) return "[!    ] No Signal"; 
     if (rsrp > -80)  return "[#####] Excellent";
     if (rsrp > -90)  return "[#### ] Good     ";
     if (rsrp > -105) return "[###  ] Fair     ";
@@ -71,6 +74,40 @@ int setup_serial(const char* portname) {
     return fd;
 }
 
+// === VISUAL DASHBOARD ===
+void print_dashboard(const deque<string>& history) {
+    // Clear Screen
+    printf("\033[2J\033[H"); 
+
+    printf("========================================================================================\n");
+    printf("   📡  LM5 LTE SIGNAL MONITOR - LIVE DASHBOARD  📡\n");
+    printf("========================================================================================\n");
+    
+    // Explanation Header
+    printf(" METRIC | GOOD RANGE      | WHY IT MATTERS?\n");
+    printf("--------+-----------------+-------------------------------------------------------------\n");
+    printf(" RSRP   | > -105 dBm      | True Signal Strength. If low (-120), antenna is disconnected.\n");
+    printf(" SINR   | > 5 dB          | Signal Clarity. High = Fast. Low = Noisy/Laggy.\n");
+    printf(" RSRQ   | > -15 dB        | Quality. Low (-20) means the tower is congested.\n");
+    printf(" RSSI   | > -85 dBm       | Total Noise. Ignored if RSRP is bad.\n");
+    printf("========================================================================================\n");
+    
+    // --- PERFECTLY ALIGNED COLUMNS ---
+    // Format: %-20s means "Reserve 20 spaces, align left"
+    printf(" %-20s | %-5s | %-10s | %-8s | %-5s | %-18s \n", 
+           "TIMESTAMP", "RSSI", "RSRP", "SINR", "RSRQ", "VISUAL CHART");
+    
+    printf("----------------------+-------+------------+----------+-------+--------------------\n");
+
+    // Print Data History
+    for (const string& line : history) {
+        printf("%s", line.c_str());
+    }
+    printf("----------------------------------------------------------------------------------------\n");
+    printf(" Saving log to: %s  (Press Ctrl+C to stop)\n", LOG_FILE_NAME);
+    fflush(stdout);
+}
+
 int main() {
     signal(SIGPIPE, SIG_IGN);
     setbuf(stdout, NULL); 
@@ -78,29 +115,25 @@ int main() {
     ofstream logFile;
     logFile.open(LOG_FILE_NAME, ios::app); 
     
-    // Header updated with RSRQ
     if (logFile.tellp() == 0) {
         logFile << "Timestamp,RSSI,RSRP,SINR,RSRQ,Quality_Status" << endl;
     }
 
-    printf("LM5 Full QA Monitor (RSSI + RSRP + SINR + RSRQ)\n");
-    printf("Port: %s | Log: %s\n", PORT_NAME, LOG_FILE_NAME);
-    printf("---------------------------------------------------------------------------------------\n");
-    printf("TIMESTAMP           | RSSI  | RSRP (True Signal)    | SINR | RSRQ  | VISUAL CHART\n");
-    printf("---------------------------------------------------------------------------------------\n");
-    
+    deque<string> history; 
     int fd = -1;
 
     while (true) {
         if (fd < 0) {
             fd = setup_serial(PORT_NAME);
             if (fd < 0) {
-                printf(".\r"); 
-                fflush(stdout);
+                history.push_back(" [CONNECTING] Trying to open port...\n");
+                if (history.size() > HISTORY_SIZE) history.pop_front();
+                print_dashboard(history);
                 this_thread::sleep_for(chrono::seconds(1));
                 continue;
             } else {
-                printf("\n[INFO] Connected to Modem!\n");
+                history.push_back(" [SUCCESS] Connected to Modem!\n");
+                if (history.size() > HISTORY_SIZE) history.pop_front();
             }
         }
 
@@ -109,7 +142,6 @@ int main() {
         int write_status = write(fd, command.c_str(), command.length());
         
         if (write_status < 0) {
-            printf("\n[ERROR] USB Disconnected. Retrying...\n");
             close(fd);
             fd = -1; 
             continue;
@@ -148,19 +180,28 @@ int main() {
                         try { values.push_back(stoi(segment)); } catch(...) { values.push_back(-999); }
                     }
 
-                    // We need at least 4 values now (RSSI, RSRP, SINR, RSRQ)
                     if (values.size() >= 4) {
                         int rssi = values[0];
                         int rsrp = values[1]; 
-                        int sinr = values[2] / 10; // SINR is often scaled
-                        int rsrq = values[3];      // RSRQ is usually raw dB value
+                        int sinr = values[2] / 10; 
+                        int rsrq = values[3];      
                         
                         string ts = get_timestamp();
                         const char* bar = get_quality_bar(rsrp);
 
-                        // Updated Print Format
-                        printf("%s | %d | %d dBm %s | %d dB | %d | \n", 
-                               ts.c_str(), rssi, rsrp, bar, sinr, rsrq);
+                        // --- STRICT FORMATTING ---
+                        // This matches the Header widths exactly
+                        char screen_output[256];
+                        snprintf(screen_output, sizeof(screen_output), 
+                                " %-20s | %-5d | %-4d dBm  | %-4d dB  | %-5d | %-18s \n", 
+                                ts.c_str(), rssi, rsrp, sinr, rsrq, bar);
+
+                        history.push_back(string(screen_output));
+                        if (history.size() > HISTORY_SIZE) {
+                            history.pop_front();
+                        }
+
+                        print_dashboard(history);
                         
                         if (logFile.is_open()) {
                             logFile << ts << "," << rssi << "," << rsrp << "," << sinr << "," << rsrq << "," << bar << endl;

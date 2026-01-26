@@ -80,16 +80,16 @@ void print_dashboard(const deque<string>& history) {
     printf("\033[2J\033[H"); 
 
     printf("========================================================================================\n");
-    printf("   📡  LM5 LTE SIGNAL MONITOR - LIVE DASHBOARD  📡\n");
+    printf("     LM5 LTE SIGNAL MONITOR - LIVE DASHBOARD  \n");
     printf("========================================================================================\n");
     
     // Explanation Header
     printf(" METRIC | GOOD RANGE      | WHY IT MATTERS?\n");
     printf("--------+-----------------+-------------------------------------------------------------\n");
+    printf(" RSSI   | > -85 dBm       | Total Noise. Ignored if RSRP is bad.\n");
     printf(" RSRP   | > -105 dBm      | True Signal Strength. If low (-120), antenna is disconnected.\n");
     printf(" SINR   | > 5 dB          | Signal Clarity. High = Fast. Low = Noisy/Laggy.\n");
     printf(" RSRQ   | > -15 dB        | Quality. Low (-20) means the tower is congested.\n");
-    printf(" RSSI   | > -85 dBm       | Total Noise. Ignored if RSRP is bad.\n");
     printf("========================================================================================\n");
     
     // --- PERFECTLY ALIGNED COLUMNS ---

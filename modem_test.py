@@ -6,7 +6,7 @@ import sys
 # SETTINGS
 # ==========================================
 # Change this to your port (/dev/ttyUSB2 or /dev/ttyUSB7)
-PORT = '/dev/ttyUSB2'  
+PORT = '/dev/ttyUSB7' # or ttyUSB2  
 BAUD_RATE = 115200
 # ==========================================
 

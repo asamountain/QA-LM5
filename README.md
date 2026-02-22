@@ -6,6 +6,9 @@ This tool moves beyond simple "Signal Strength" (RSSI) to monitor the critical "
 
 <img width="711" height="536" alt="image" src="https://github.com/user-attachments/assets/6df4c21e-1cb3-447c-9746-daec01dafbe8" />
 
+## Reference : Quectel Official Document `AT+QCSQ` with BG96
+<img width="539" height="750" alt="image 2" src="https://github.com/user-attachments/assets/99b72b39-891d-4938-a5b5-c3f032dc4a67" />
+
 
 ---
 
@@ -266,5 +269,4 @@ Contributions, issues, and feature requests are welcome!  Feel free to check the
 **Need Help?** Open an issue on GitHub or check the troubleshooting section above. 
 **Reference** Quectel Official Document
 
-<img width="539" height="750" alt="image 2" src="https://github.com/user-attachments/assets/99b72b39-891d-4938-a5b5-c3f032dc4a67" />
 

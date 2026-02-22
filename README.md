@@ -264,3 +264,7 @@ Contributions, issues, and feature requests are welcome!  Feel free to check the
 ---
 
 **Need Help?** Open an issue on GitHub or check the troubleshooting section above. 
+**Reference** Quectel Official Document
+
+<img width="539" height="750" alt="image 2" src="https://github.com/user-attachments/assets/99b72b39-891d-4938-a5b5-c3f032dc4a67" />
+

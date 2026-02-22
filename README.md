@@ -4,6 +4,9 @@ A robust C++ utility designed for Quality Assurance (QA) testing of Quectel LTE 
 
 This tool moves beyond simple "Signal Strength" (RSSI) to monitor the critical "Vital Signs" of an LTE connection: **RSRP**, **SINR**, and **RSRQ**. It provides real-time visualization on the console with a live scrolling dashboard.
 
+<img width="711" height="536" alt="image" src="https://github.com/user-attachments/assets/6df4c21e-1cb3-447c-9746-daec01dafbe8" />
+
+
 ---
 
 ## 🚀 Key Features
